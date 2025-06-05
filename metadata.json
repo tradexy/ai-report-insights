@@ -1,0 +1,6 @@
+{
+  "name": "AI Report Insights",
+  "description": "An AI-powered assistant to extract, curate, and retrieve actionable insights from textual data and web searches, augmenting report analysis.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}

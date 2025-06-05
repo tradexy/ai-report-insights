@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en" class=""> <!-- Add class here for dark mode strategy, will be 'dark' if dark mode is active -->
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Report Insights</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Enables Tailwind's class-based dark mode
+    tailwind.config = {
+      darkMode: 'class', 
+      theme: {
+        extend: {
+          // You can extend your theme here if needed
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbar for webkit browsers */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1; /* Light track */
+      border-radius: 10px;
+    }
+    html.dark ::-webkit-scrollbar-track {
+      background: #2d3748; /* Dark track for dark mode (slate-800) */
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #888; /* Light thumb */
+      border-radius: 10px;
+    }
+    html.dark ::-webkit-scrollbar-thumb {
+      background: #555; /* Darker thumb for dark mode */
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555; /* Light thumb hover */
+    }
+    html.dark ::-webkit-scrollbar-thumb:hover {
+      background: #333; /* Darker thumb hover for dark mode */
+    }
+
+    /* For Firefox */
+    :root {
+      scrollbar-color: #888 #f1f1f1; /* Default scrollbar color (thumb track) */
+    }
+    html.dark {
+      scrollbar-color: #555 #2d3748; /* Scrollbar color for dark mode */
+    }
+    
+    body {
+      transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+    }
+
+    @media print {
+      body {
+        background-color: white !important;
+        color: black !important;
+        -webkit-print-color-adjust: exact; /* Chrome, Safari */
+        print-color-adjust: exact; /* Firefox, Edge */
+        margin: 0;
+        padding: 0;
+      }
+
+      /* Hide elements not meant for printing */
+      #input-controls-section,
+      #observability-log-section,
+      #app-footer,
+      #settings-action-button, /* Settings button in header */
+      #print-action-button,    /* Print button in header */
+      #chart-type-select-wrapper /* Chart type dropdown in ResponseDisplay */ {
+        display: none !important;
+      }
+
+      /* Keep app header title visible, but ensure it's styled for print */
+      #app-header {
+        background: white !important;
+        color: black !important;
+        box-shadow: none !important;
+        border-bottom: 1px solid #ccc !important;
+        padding: 1rem !important; /* Adjust padding as needed */
+        text-align: center;
+      }
+      #app-header h1 {
+         color: black !important;
+         font-size: 1.5rem !important; /* Adjust as needed */
+      }
+       #app-header svg:not(#print-action-button svg, #settings-action-button svg) { /* App logo potentially */
+        stroke: black !important; /* Or appropriate print color for logo */
+        fill: black !important;
+      }
+
+
+      /* Style the main print area */
+      #analysis-result-print-area {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 1rem !important; /* Add some padding for print */
+        border: none !important;
+        box-shadow: none !important;
+        background-color: white !important;
+      }
+       #analysis-result-print-area h2 { /* Title "Analysis Result" */
+         color: black !important;
+         border-bottom: 1px solid #ccc !important;
+         margin-bottom: 1rem !important;
+         padding-bottom: 0.5rem !important;
+         font-size: 1.25rem !important;
+       }
+
+
+      /* Ensure full content of the response display is printed */
+      #response-display-scroll-container {
+        overflow-y: visible !important;
+        max-height: none !important;
+        height: auto !important;
+        padding: 0 !important; /* Remove padding if the parent has it */
+      }
+      
+      /* General text elements for print */
+      #analysis-result-print-area *,
+      #analysis-result-print-area p,
+      #analysis-result-print-area span,
+      #analysis-result-print-area div,
+      #analysis-result-print-area li,
+      #analysis-result-print-area th,
+      #analysis-result-print-area td,
+      #analysis-result-print-area label,
+      #analysis-result-print-area h1,
+      #analysis-result-print-area h3,
+      #analysis-result-print-area h4,
+      #analysis-result-print-area h5,
+      #analysis-result-print-area h6 {
+        color: black !important;
+        background-color: transparent !important;
+      }
+
+      #analysis-result-print-area .prose { /* For text directly from AI */
+          background-color: #f9f9f9 !important; /* Light background for readability */
+          border: 1px solid #eee !important;
+          padding: 0.5rem !important;
+          border-radius: 0 !important;
+      }
+      
+      /* Chart specific (canvas itself will print, but container might need help) */
+      #analysis-result-print-area canvas {
+        max-width: 100% !important;
+        height: auto !important;
+        border: 1px solid #ddd !important; /* Add a light border around charts */
+        margin-bottom: 1rem;
+      }
+      /* For ForceDirectedRelationshipChart container div */
+       #analysis-result-print-area div[style*="height: 350px"] {
+          height: auto !important; /* Allow it to expand */
+          min-height: 300px !important; /* Maintain a min-height if needed */
+          page-break-inside: avoid !important;
+       }
+
+
+      /* Table styling for print */
+      #analysis-result-print-area table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin-bottom: 1rem !important;
+        font-size: 9pt !important; /* Smaller font for tables */
+        page-break-inside: auto !important;
+      }
+      #analysis-result-print-area th,
+      #analysis-result-print-area td {
+        border: 1px solid #ccc !important;
+        padding: 4px 6px !important;
+        text-align: left !important;
+      }
+      #analysis-result-print-area thead th {
+        background-color: #f0f0f0 !important; /* Light gray for table headers */
+        font-weight: bold !important;
+      }
+      /* For sticky headers in Adjacency Matrix, normal positioning for print */
+      #analysis-result-print-area th.sticky,
+      #analysis-result-print-area td.sticky {
+        position: static !important; 
+      }
+
+
+      /* Links */
+      #analysis-result-print-area a {
+        color: #0000EE !important; /* Standard blue for links */
+        text-decoration: underline !important;
+      }
+      #analysis-result-print-area a[href]::after { /* Optionally show URL for external links */
+        content: " (" attr(href) ")";
+        font-size: 0.8em;
+        color: #555 !important;
+      }
+      #analysis-result-print-area a[href^="#"]::after { /* Don't show URL for internal links */
+         content: "";
+      }
+
+      /* Page breaks */
+      h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid !important;
+      }
+      table, figure, img, canvas {
+        page-break-inside: avoid !important;
+      }
+    }
+  </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "pdfjs-dist": "https://esm.sh/pdfjs-dist@^5.3.31",
+    "mammoth": "https://esm.sh/mammoth@^1.9.1",
+    "react-chartjs-2": "https://esm.sh/react-chartjs-2@^5.3.0",
+    "react-force-graph-2d": "https://esm.sh/react-force-graph-2d@^1.27.1",
+    "chart.js": "https://esm.sh/chart.js@^4.4.9",
+    "@google/genai": "https://esm.sh/@google/genai@^1.3.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-slate-100 dark:bg-slate-900"> <!-- Default light, dark mode class will override -->
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
